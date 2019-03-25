@@ -2,18 +2,33 @@ using Stryker.Core.Options;
 
 namespace Stryker.Core
 {
+    public enum RunStatus
+    {
+        Successfull = 0,
+        Unsuccessfull,
+        NothingToTest,
+        AllMutationsSkipped,
+    }
+
     public class StrykerRunResult
     {
         private StrykerOptions _options { get; }
         public decimal? MutationScore { get; }
+        public RunStatus Status { get; }
 
         public StrykerRunResult(StrykerOptions options, decimal? mutationScore)
         {
             _options = options;
             MutationScore = mutationScore;
+            Status = IsScoreAboveThresholdBreak() ? RunStatus.Successfull : RunStatus.Unsuccessfull; 
         }
 
-        public bool IsScoreAboveThresholdBreak()
+        public StrykerRunResult(RunStatus status)
+        {
+            Status = status;
+        }
+
+        private bool IsScoreAboveThresholdBreak()
         {
             if (MutationScore == null)
             {

@@ -69,7 +69,19 @@ namespace Stryker.Core
                     mutationTestExecutor: new MutationTestExecutor(_input.TestRunner, _input.TimeoutMS));
 
                 // mutate
-                _mutationTestProcess.Mutate(options);
+                var mutationResult = _mutationTestProcess.Mutate(options);
+
+                if (mutationResult.NumberOfAllMutations == mutationResult.MutationsSkipped)
+                {
+                    logger.LogWarning("It looks like all mutants were excluded, try a re-run with less exclusion.");
+                    return new StrykerRunResult(RunStatus.AllMutationsSkipped);
+                }
+
+                if (mutationResult.MutationsToTest == 0)
+                {
+                    logger.LogWarning("It\'s a mutant-free world, nothing to test.");
+                    return new StrykerRunResult(RunStatus.NothingToTest);
+                }
 
                 // test mutations and return results
                 return _mutationTestProcess.Test(options);

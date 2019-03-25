@@ -84,10 +84,10 @@ namespace Stryker.CLI
             // start with the stryker header
             PrintStykerASCIIName();
 
-            StrykerRunResult results = _stryker.RunMutationTest(options);
-            if (!results.IsScoreAboveThresholdBreak())
+            StrykerRunResult runResult = _stryker.RunMutationTest(options);
+            if (runResult.Status == RunStatus.Unsuccessfull)
             {
-                HandleBreakingThresholdScore(options, results);
+                HandleBreakingThresholdScore(options, runResult);
             }
         }
 

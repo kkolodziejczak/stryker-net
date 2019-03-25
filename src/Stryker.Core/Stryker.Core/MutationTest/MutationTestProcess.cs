@@ -18,7 +18,7 @@ namespace Stryker.Core.MutationTest
 {
     public interface IMutationTestProcess
     {
-        void Mutate(StrykerOptions options);
+        StrykerMutationResult Mutate(StrykerOptions options);
         StrykerRunResult Test(StrykerOptions options);
     }
 
@@ -49,7 +49,7 @@ namespace Stryker.Core.MutationTest
             _logger = ApplicationLogging.LoggerFactory.CreateLogger<MutationTestProcess>();
         }
 
-        public void Mutate(StrykerOptions options)
+        public StrykerMutationResult Mutate(StrykerOptions options)
         {
             var mutatedSyntaxTrees = new Collection<SyntaxTree>
             {
@@ -86,6 +86,7 @@ namespace Stryker.Core.MutationTest
 
             _logger.LogInformation("{0} mutants created", _input.ProjectInfo.ProjectContents.Mutants.Count());
 
+            int numberOfSkippedMutations = 0;
             using (var ms = new MemoryStream())
             {
                 // compile the mutated syntax trees
@@ -126,13 +127,18 @@ namespace Stryker.Core.MutationTest
                     {
                         mutant.ResultStatus = MutantStatus.Skipped;
                     }
-                    _logger.LogInformation("{0} mutants got status {1}", mutantsToSkip.Count(), MutantStatus.Skipped.ToString());
+                    numberOfSkippedMutations = mutantsToSkip.Count;
+                    _logger.LogInformation("{0} mutants got status {1}", numberOfSkippedMutations, MutantStatus.Skipped.ToString());
                 }
             }
 
-            _logger.LogInformation("{0} mutants ready for test", _input.ProjectInfo.ProjectContents.TotalMutants.Count());
+            int numberOfMutationsToTest = _input.ProjectInfo.ProjectContents.TotalMutants.Count();
+            int numberOfAllMutations = _input.ProjectInfo.ProjectContents.Mutants.Count();
+            _logger.LogInformation("{0} mutants ready for test", numberOfMutationsToTest);
 
             _reporter.OnMutantsCreated(_input.ProjectInfo.ProjectContents);
+
+            return new StrykerMutationResult(numberOfAllMutations, numberOfMutationsToTest, numberOfSkippedMutations);
         }
 
         public StrykerRunResult Test(StrykerOptions options)
